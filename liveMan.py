@@ -17,6 +17,7 @@ import urllib.parse
 from contextlib import contextmanager
 from py_mini_racer import MiniRacer
 from unittest.mock import patch
+from MessageHandler import MessageHandler
 
 import execjs
 import requests
@@ -248,83 +249,60 @@ class DouyinLiveWebFetcher:
     def _parseChatMsg(self, payload):
         """聊天消息"""
         message = ChatMessage().parse(payload)
-        user_name = message.user.nick_name
-        user_id = message.user.id
-        content = message.content
-        print(f"【聊天msg】[{user_id}]{user_name}: {content}")
+        MessageHandler.handle_chat(message)
     
     def _parseGiftMsg(self, payload):
         """礼物消息"""
         message = GiftMessage().parse(payload)
-        user_name = message.user.nick_name
-        gift_name = message.gift.name
-        gift_cnt = message.combo_count
-        print(f"【礼物msg】{user_name} 送出了 {gift_name}x{gift_cnt}")
+        MessageHandler.handle_gift(message)
     
     def _parseLikeMsg(self, payload):
         '''点赞消息'''
         message = LikeMessage().parse(payload)
-        user_name = message.user.nick_name
-        count = message.count
-        print(f"【点赞msg】{user_name} 点了{count}个赞")
+        MessageHandler.handle_like(message)
     
     def _parseMemberMsg(self, payload):
         '''进入直播间消息'''
         message = MemberMessage().parse(payload)
-        user_name = message.user.nick_name
-        user_id = message.user.id
-        gender = ["女", "男"][message.user.gender]
-        print(f"【进场msg】[{user_id}][{gender}]{user_name} 进入了直播间")
+        MessageHandler.handle_member(message)
     
     def _parseSocialMsg(self, payload):
         '''关注消息'''
         message = SocialMessage().parse(payload)
-        user_name = message.user.nick_name
-        user_id = message.user.id
-        print(f"【关注msg】[{user_id}]{user_name} 关注了主播")
+        MessageHandler.handle_social(message)
     
     def _parseRoomUserSeqMsg(self, payload):
         '''直播间统计'''
         message = RoomUserSeqMessage().parse(payload)
-        current = message.total
-        total = message.total_pv_for_anchor
-        print(f"【统计msg】当前观看人数: {current}, 累计观看人数: {total}")
+        MessageHandler.handle_room_user_seq(message)
     
     def _parseFansclubMsg(self, payload):
         '''粉丝团消息'''
         message = FansclubMessage().parse(payload)
-        content = message.content
-        print(f"【粉丝团msg】 {content}")
+        MessageHandler.handle_fansclub(message)
     
     def _parseEmojiChatMsg(self, payload):
         '''聊天表情包消息'''
         message = EmojiChatMessage().parse(payload)
-        emoji_id = message.emoji_id
-        user = message.user
-        common = message.common
-        default_content = message.default_content
-        print(f"【聊天表情包id】 {emoji_id},user：{user},common:{common},default_content:{default_content}")
+        MessageHandler.handle_emoji_chat(message)
     
     def _parseRoomMsg(self, payload):
+        '''直播间消息'''
         message = RoomMessage().parse(payload)
-        common = message.common
-        room_id = common.room_id
-        print(f"【直播间msg】直播间id:{room_id}")
+        MessageHandler.handle_room_message(message)
     
     def _parseRoomStatsMsg(self, payload):
+        '''直播间统计消息'''
         message = RoomStatsMessage().parse(payload)
-        display_long = message.display_long
-        print(f"【直播间统计msg】{display_long}")
+        MessageHandler.handle_room_stats_message(message)
     
     def _parseRankMsg(self, payload):
+        '''直播间排行榜消息'''
         message = RoomRankMessage().parse(payload)
-        ranks_list = message.ranks_list
-        print(f"【直播间排行榜msg】{ranks_list}")
+        MessageHandler.handle_rank(message)
     
     def _parseControlMsg(self, payload):
         '''直播间状态消息'''
         message = ControlMessage().parse(payload)
-        
-        if message.status == 3:
-            print("直播间已结束")
+        if MessageHandler.handle_control_message(message):
             self.stop()
